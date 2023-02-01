@@ -1,0 +1,120 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Rooms{
+  id Int @id @default(autoincrement())
+  users Users[]
+  messages Messages[]
+}
+
+model Messages{
+  id Int @id @default(autoincrement())
+  message String
+  createdAt DateTime @default(now())
+  roomId Int
+  userId Int //sender id
+  user Users @relation(fields: [userId], references: [id])
+  room Rooms @relation(fields: [roomId], references: [id])
+}
+
+model Users{
+  id Int @id @default(autoincrement())
+  firstname String?
+  lastname String?
+  email String @unique
+  password String
+  isVerified Boolean @default(false)
+  verifyToken String
+  refreshToken String?
+
+  rooms Rooms[] 
+  messages Messages[]
+
+  role Roles @default(User)
+  image Images[]
+
+  mentor Mentors[]
+  isMentor Boolean @default(false)
+  becameMentor DateTime @default(now()) @updatedAt()
+
+  mentorshipRequest Mentorships[]
+  
+  languages Languages[] 
+  skills  Skills[] //e.g express, angularjs, java !max10
+  country Countries[]
+  favoritesCoaches Int?
+  title String? //e.g Software developer, 
+  about String? @db.VarChar(255)
+}
+
+model Mentors{
+  id Int @id @default(autoincrement())
+  views Int @default(0) 
+  userId Int @unique
+  status Status @default(Pending)
+  user Users @relation(fields: [userId], references: [id])
+  mentorships Mentorships[]
+}
+
+model Mentorships{
+  id Int @id @default(autoincrement())
+  background String
+  expectations String
+  message String
+  status Status @default(Pending)
+  senderId Int
+  mentorId Int
+  user Users @relation(fields: [senderId], references: [id])
+  mentor Mentors @relation(fields: [mentorId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+
+model Countries{
+  id Int @id @default(autoincrement())
+  country String @unique
+  user Users[]
+}
+
+model Skills{
+  id Int @id @default(autoincrement())
+  skill String @unique
+  users Users[]
+}
+
+model Languages{
+  id Int @id @default(autoincrement())
+  language String @unique
+  users Users[]
+}
+
+model Images {
+  id Int @id @default(autoincrement()) 
+  fileName String
+  fileUrl  String 
+  key      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId Int @unique
+  User Users @relation(fields: [userId], references: [id])
+}
+
+enum Roles{
+  Admin
+  User
+}
+
+enum Status{
+  Accepted
+  Pending
+  Rejected
+}
